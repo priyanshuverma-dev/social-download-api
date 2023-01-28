@@ -20,8 +20,8 @@ app.get("/pinterest", async (req, res) => {
   const url = req.query.url;
   try {
     if (url.match("pin.it")) {
-      fetch(url)
-        .then((r) => {
+      await fetch(url)
+        .then(async (r) => {
           if (!r.ok) {
             throw new Error(`HTTP error ${r.status}`);
           }
@@ -34,17 +34,20 @@ app.get("/pinterest", async (req, res) => {
           const path = uri.pathname;
           const finalUrl = "https://" + uri.hostname + path;
           console.log(finalUrl);
-          request(finalUrl, function (error, response, body) {
-            const dom = new JSDOM(body);
-            const document = dom.window.document;
-            const video = document.getElementsByTagName("video")[0].src;
-            const addInQuality = video.replace("/hls/", "/720p/");
-            const outUrl = addInQuality.replace(".m3u8", ".mp4");
-            console.log(outUrl);
-            res.status(200).send({
-              url: outUrl,
-              title: "Pinterest shorten url",
+          const out = await new Promise((resolve, reject) => {
+            request(finalUrl, async function (error, response, body) {
+              const dom = new JSDOM(body);
+              const document = dom.window.document;
+              const video = document.getElementsByTagName("video")[0].src;
+              const addInQuality = video.replace("/hls/", "/720p/");
+              const outUrl = addInQuality.replace(".m3u8", ".mp4");
+              console.log(outUrl);
+              resolve(outUrl);
             });
+          });
+          res.status(200).send({
+            url: out,
+            title: "Pinterest shorten url",
           });
         })
         .catch((error) => console.error(error));
@@ -61,10 +64,6 @@ app.get("/pinterest", async (req, res) => {
           url: outUrl,
           title: "Pinterest full url",
         });
-      });
-    } else {
-      res.status(200).send({
-        error: "Not a valid url",
       });
     }
     console.log(url);
