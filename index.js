@@ -2,6 +2,7 @@ import express, { json } from "express";
 import cors from "cors";
 import fetch from "node-fetch";
 import { JSDOM } from "jsdom";
+import instagramGetUrl from "instagram-url-direct";
 
 const app = express();
 app.use(cors());
@@ -65,10 +66,13 @@ app.get("/pinterest", async (req, res) => {
 app.get("/instagram", async (req, res) => {
   const url = req.query.url;
   try {
-    console.log(url);
     if (url.match("instagram.com")) {
+      const rsd = await instagramGetUrl(url);
+
+      const uri = rsd.url_list[0];
+
       res.status(200).send({
-        url: url,
+        url: uri,
         title: "Instagram shorten url",
       });
     } else {
