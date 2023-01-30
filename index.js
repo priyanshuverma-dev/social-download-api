@@ -1,7 +1,6 @@
 import express, { json } from "express";
 import cors from "cors";
 import fetch from "node-fetch";
-import request from "request";
 import { JSDOM } from "jsdom";
 
 const app = express();
@@ -20,53 +19,44 @@ app.get("/pinterest", async (req, res) => {
   const url = req.query.url;
   try {
     if (url.match("pin.it")) {
-      await fetch(url)
-        .then(async (r) => {
-          if (!r.ok) {
-            throw new Error(`HTTP error ${r.status}`);
-          }
-          const url = r.url;
-          const uri = new URL(url);
-          uri.searchParams.delete("invite_code");
-          uri.searchParams.delete("sender");
-          uri.searchParams.delete("sfo");
-          uri.pathname = uri.pathname.replace("/sent/", "");
-          const path = uri.pathname;
-          const finalUrl = "https://" + uri.hostname + path;
-          console.log(finalUrl);
-          const out = await new Promise((resolve, reject) => {
-            request(finalUrl, async function (error, response, body) {
-              const dom = new JSDOM(body);
-              const document = dom.window.document;
-              const video = document.getElementsByTagName("video")[0].src;
-              const addInQuality = video.replace("/hls/", "/720p/");
-              const outUrl = addInQuality.replace(".m3u8", ".mp4");
-              console.log(outUrl);
-              resolve(outUrl);
-            });
-          });
-          res.status(200).send({
-            url: out,
-            title: "Pinterest shorten url",
-          });
-        })
-        .catch((error) => console.error(error));
-    }
-    if (url.match("pinterest.com")) {
-      request(url, function (error, response, body) {
-        const dom = new JSDOM(body);
-        const document = dom.window.document;
-        const video = document.getElementsByTagName("video")[0].src;
-        const addInQuality = video.replace("/hls/", "/720p/");
-        const outUrl = addInQuality.replace(".m3u8", ".mp4");
-        console.log(outUrl);
-        res.status(200).send({
-          url: outUrl,
-          title: "Pinterest full url",
-        });
+      const longUrl = await expandURL(url);
+      const { hostname, pathname } = new URL(longUrl);
+      const path = pathname.replace("/sent/", "");
+      const finalUrl = `https://${hostname}${path}`;
+      const response = await fetch(finalUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+      const body = await response.text();
+      const video = new JSDOM(body).window.document.getElementsByTagName(
+        "video"
+      )[0].src;
+      const outUrl = video.replace("/hls/", "/720p/").replace(".m3u8", ".mp4");
+      console.log(outUrl);
+      res.status(200).send({
+        url: outUrl,
+        title: "Pinterest shorten url",
       });
     }
-    console.log(url);
+    if (url.match("pinterest.com")) {
+      const { hostname, pathname } = new URL(url);
+      const path = pathname.replace("/sent/", "");
+      const finalUrl = `https://${hostname}${path}`;
+      const response = await fetch(finalUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+      const body = await response.text();
+      const video = new JSDOM(body).window.document.getElementsByTagName(
+        "video"
+      )[0].src;
+      const outUrl = video.replace("/hls/", "/720p/").replace(".m3u8", ".mp4");
+      console.log(outUrl);
+      res.status(200).send({
+        url: outUrl,
+        title: "Pinterest full url",
+      });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).send({ error });
@@ -91,3 +81,20 @@ app.get("/instagram", async (req, res) => {
     res.status(500).send({ error });
   }
 });
+
+async function expandURL(shortenURL) {
+  const uri = new URL(shortenURL);
+  const path = uri.pathname;
+  const finalUrl = `https://api.pinterest.com/url_shortener${path}/redirect/`;
+  try {
+    let response = await fetch(finalUrl, {
+      method: "HEAD",
+      redirect: "manual",
+    });
+    let location = response.headers.get("location");
+    return location;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}

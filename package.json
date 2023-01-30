@@ -1,5 +1,5 @@
 {
-  "name": "js",
+  "name": "video-downloader-api",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -19,7 +19,6 @@
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "jsdom": "^21.1.0",
-    "node-fetch": "^3.3.0",
-    "request": "^2.88.2"
+    "node-fetch": "^3.3.0"
   }
 }
