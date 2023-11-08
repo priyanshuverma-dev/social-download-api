@@ -17,7 +17,7 @@ app.get("/", async (req, res) => {
   });
 });
 app.get("/pinterest", async (req, res) => {
-  const url = req.query.url;
+  var url = req.query.url;
   try {
     if (url.match("pin.it")) url = await expandURL(url);
     
