@@ -50,7 +50,7 @@ app.get("/pinterest", async (req, res) => {
         desc = new JSDOM(body).window.document.querySelector('div[data-test-id="truncated-description"] div div span').innerHTML;
     } catch (_) {}
 
-    //console.log(outUrl);
+    console.log(outUrl);
 
     res.status(200).send({
         url: outUrl,
