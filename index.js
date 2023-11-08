@@ -29,10 +29,17 @@ app.get("/pinterest", async (req, res) => {
         throw new Error(`HTTP error ${response.status}`);
       }
       const body = await response.text();
-      const video = new JSDOM(body).window.document.getElementsByTagName(
-        "video"
-      )[0].src;
-      const outUrl = video.replace("/hls/", "/720p/").replace(".m3u8", ".mp4");
+      let outUrl;
+      try {
+          const video = new JSDOM(body).window.document.getElementsByTagName(
+              "video"
+          )[0].src;
+          outUrl = video.replace("/hls/", "/720p/").replace(".m3u8", ".mp4");
+      } catch (_) {
+          outUrl = new JSDOM(body).window.document.getElementsByTagName(
+              "img"
+          )[0].src;
+      }
       console.log(outUrl);
       res.status(200).send({
         url: outUrl,
@@ -48,10 +55,17 @@ app.get("/pinterest", async (req, res) => {
         throw new Error(`HTTP error ${response.status}`);
       }
       const body = await response.text();
-      const video = new JSDOM(body).window.document.getElementsByTagName(
-        "video"
-      )[0].src;
-      const outUrl = video.replace("/hls/", "/720p/").replace(".m3u8", ".mp4");
+      let outUrl;
+      try {
+          const video = new JSDOM(body).window.document.getElementsByTagName(
+              "video"
+          )[0].src;
+          outUrl = video.replace("/hls/", "/720p/").replace(".m3u8", ".mp4");
+      } catch (_) {
+          outUrl = new JSDOM(body).window.document.getElementsByTagName(
+              "img"
+          )[0].src;
+      }
       console.log(outUrl);
       res.status(200).send({
         url: outUrl,
